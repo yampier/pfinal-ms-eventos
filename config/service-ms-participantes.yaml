@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ms-participantes
+spec:
+  selector:
+    app: ms-participantes
+  ports:
+  - protocol: TCP
+    port: 9081 # Puerto interno del servicio
+    targetPort: 9081 # Puerto del contenedor
+    nodePort: 30081 # Puerto expuesto en el nodo
+  type: NodePort

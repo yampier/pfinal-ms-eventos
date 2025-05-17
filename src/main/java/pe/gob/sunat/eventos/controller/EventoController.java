@@ -13,6 +13,9 @@ public class EventoController {
 
     private final EventoService eventoService;
 
+    @Autowired
+    private Environment environment;
+
     public EventoController(EventoService eventoService) {
         this.eventoService = eventoService;
     }
@@ -27,7 +30,12 @@ public class EventoController {
     // Listar todos los eventos
     @GetMapping
     public ResponseEntity<List<Evento>> listarTodos() {
-        return ResponseEntity.ok(eventoService.listar());
+        return Map.of(
+              "POD_NAME", environment.getProperty("POD_NAME", "Unknown"),   
+              "POD_ID", environment.getProperty("POD_ID", "Unkown"), 
+              "SALUDO", environment.getProperty("config.saludo", "Unknown"),
+              "eventos", eventoService.listar());
+        //return ResponseEntity.ok(eventoService.listar());
     }
 
     // Obtener un evento por código

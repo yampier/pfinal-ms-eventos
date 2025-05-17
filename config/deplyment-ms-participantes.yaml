@@ -1,0 +1,118 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ms-participantes
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ms-participantes
+  template:
+    metadata:
+      labels:
+        app: ms-participantes
+    spec:
+      containers:
+      - name: ms-participantes
+        image: jyugar/ms-participantes:1.2
+        args:
+            - "--spring.config.additional-location=file:/config/"
+        ports:
+        - containerPort: 9081
+        
+        resources:
+          requests:
+            cpu: "400m"
+            memory: "512Mi"
+          limits:
+            cpu: "500m"
+            memory: "800Mi"
+
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 9081
+          initialDelaySeconds: 30
+          periodSeconds: 15
+          timeoutSeconds: 3
+
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 9081
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 3
+        
+        env:
+          - name: DB_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: db-participantes
+                key: DB_USERNAME
+          - name: DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: db-participantes
+                key: DB_PASSWORD
+          - name: APP_NAME
+            valueFrom:
+              configMapKeyRef:
+                name: ms-participantes-config
+                key: APP_NAME
+          - name: SERVER_PORT
+            valueFrom:
+              configMapKeyRef:
+                name: ms-participantes-config
+                key: SERVER_PORT
+          - name: EVENTOS_SERVICE_URL
+            valueFrom:
+              configMapKeyRef:
+                name: ms-participantes-config
+                key: EVENTOS_SERVICE_URL
+          - name: DB_URL
+            valueFrom:
+              configMapKeyRef:
+                name: ms-participantes-config
+                key: DB_URL
+          - name: DB_DRIVER
+            valueFrom:
+              configMapKeyRef:
+                name: ms-participantes-config
+                key: DB_DRIVER
+          - name: JPA_DDL_AUTO
+            valueFrom:
+              configMapKeyRef:
+                name: ms-participantes-config
+                key: JPA_DDL_AUTO
+          - name: JPA_SHOW_SQL
+            valueFrom:
+              configMapKeyRef:
+                name: ms-participantes-config
+                key: JPA_SHOW_SQL
+          - name: HIBERNATE_DIALECT
+            valueFrom:
+              configMapKeyRef:
+                name: ms-participantes-config
+                key: HIBERNATE_DIALECT
+          
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: POD_ID
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
+
+        volumeMounts:
+            - name: config-volume
+              mountPath: /config/application.yml
+              subPath: application.yml
+    volumes:
+        - name: config-volume
+          configMap:
+            name: ms-participantes-config
+            items:
+              - key: application.yml
+                path: application.yml
